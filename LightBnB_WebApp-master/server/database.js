@@ -10,8 +10,6 @@ const pool = new Pool({
   database: "lightbnb",
 });
 
-
-
 /// Users
 
 /**
@@ -47,7 +45,7 @@ const getUserWithId = function (id) {
   const queryValues = [id];
 
   return pool
-    .query(queryString,queryValues)
+    .query(queryString, queryValues)
     .then((result) => {
       console.log(result.rows[0]);
       return result.rows[0];
@@ -67,11 +65,7 @@ const addUser = function (user) {
   const queryString = `INSERT INTO users (name, email, password) 
   VALUES($1,$2,$3)
   RETURNING *;`;
-  const queryValues = [
-    user.name,
-    user.email,
-    user.password
-  ];
+  const queryValues = [user.name, user.email, user.password];
 
   return pool
     .query(queryString, queryValues)
@@ -104,7 +98,7 @@ const getAllReservations = function (guest_id, limit = 10) {
   const queryValues = [guest_id, limit];
 
   return pool
-    .query(queryString,queryValues)
+    .query(queryString, queryValues)
     .then((result) => {
       console.log(result.rows);
       return result.rows;
@@ -112,7 +106,6 @@ const getAllReservations = function (guest_id, limit = 10) {
     .catch((err) => {
       console.log(err.message);
     });
-  
 };
 exports.getAllReservations = getAllReservations;
 
@@ -141,19 +134,25 @@ const getAllProperties = function (options, limit = 10) {
     queryString += `WHERE city LIKE $${queryParams.length} `;
   }
   if (options.minimum_price_per_night) {
-    (queryParams.length > 1) ? queryString += `AND ` : queryString += `WHERE `;
+    queryParams.length > 1
+      ? (queryString += `AND `)
+      : (queryString += `WHERE `);
     queryParams.push(`${options.minimum_price_per_night}`);
     queryString += `AND cost_per_night >= $${queryParams.length} *100 `;
   }
   if (options.maximum_price_per_night) {
-    (queryParams.length > 1) ? queryString += `AND ` : queryString += `WHERE `;
+    queryParams.length > 1
+      ? (queryString += `AND `)
+      : (queryString += `WHERE `);
     queryParams.push(`${options.maximum_price_per_night}`);
     queryString += `AND cost_per_night <= $${queryParams.length} *100 `;
   }
 
   if (options.owner_id) {
     queryParams.push(`${options.owner_id}`);
-    (queryParams.length > 1) ? queryString += `AND ` : queryString += `WHERE `;
+    queryParams.length > 1
+      ? (queryString += `AND `)
+      : (queryString += `WHERE `);
     queryString += `owner_id = $${queryParams.length} `;
   }
 
@@ -175,14 +174,15 @@ const getAllProperties = function (options, limit = 10) {
   console.log(queryString, queryParams);
 
   // 6
-  return pool.query(queryString, queryParams)
-  .then((result) => {
+  return pool
+    .query(queryString, queryParams)
+    .then((result) => {
       console.log(result.rows);
       return result.rows;
-      })
-  .catch((err) => {
+    })
+    .catch((err) => {
       console.log(err.message);
-  })
+    });
 };
 exports.getAllProperties = getAllProperties;
 
@@ -192,9 +192,48 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function (property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  const queryString = `INSERT INTO properties (
+    owner_id, 
+    title,
+    description,
+    thumbnail_photo_url,
+    cover_photo_url,
+    cost_per_night,
+    street,
+    city,
+    province,
+    post_code,
+    country,
+    parking_spaces,
+    number_of_bathrooms,
+    number_of_bedrooms) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+    RETURNING *;`;
+  const queryValues = [
+    property.owner_id, 
+    property.title,
+    property.description,
+    property.thumbnail_photo_url,
+    property.cover_photo_url,
+    property.cost_per_night,
+    property.street,
+    property.city,
+    property.province,
+    property.post_code,
+    property.country,
+    property.parking_spaces,
+    property.number_of_bathrooms,
+    property.number_of_bedrooms
+  ];
+
+  return pool
+    .query(queryString, queryValues)
+    .then((result) => {
+      console.log(result.rows);
+      return result.rows;
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 exports.addProperty = addProperty;
